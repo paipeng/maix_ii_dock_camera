@@ -14,6 +14,9 @@
 
 // #include "rotate.h"
 
+
+#undef CONFIG_ARCH_V831
+
 #define CALC_FPS(tips)                                                                                     \
   {                                                                                                        \
     static int fcnt = 0;                                                                                   \
