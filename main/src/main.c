@@ -151,7 +151,8 @@ void test_init() {
 
   libmaix_camera_module_init();
 
-  test.w0 = 416, test.h0 = 416;
+  test.w0 = 432, test.h0 = 432;
+  //test.w0 = 480, test.h0 = 480;
 
   test.cam0 = libmaix_cam_create(0, test.w0, test.h0, 1, 0);
   if (NULL == test.cam0) return ;  test.rgb888 = (uint8_t *)malloc(test.w0 * test.h0 * 3);
