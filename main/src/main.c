@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <signal.h>
 #include <string.h>
+#include <stdlib.h>
 #include "time.h"
 
 #include "global_config.h"
@@ -17,6 +18,8 @@
 
 #undef CONFIG_ARCH_V831
 
+char fps_str[32];
+
 #define CALC_FPS(tips)                                                                                     \
   {                                                                                                        \
     static int fcnt = 0;                                                                                   \
@@ -30,6 +33,23 @@
       fcnt = 0;                                                                                            \
     }                                                                                                      \
   }
+
+#define CALC_FPS_DISPLAY(tips, image)                                                                                     \
+  {                                                                                                        \
+    static int fcnt = 0;                                                                                   \
+    fcnt++;                                                                                                \
+    static struct timespec ts1, ts2;                                                                       \
+    clock_gettime(CLOCK_MONOTONIC, &ts2);                                                                  \
+    if ((ts2.tv_sec * 1000 + ts2.tv_nsec / 1000000) - (ts1.tv_sec * 1000 + ts1.tv_nsec / 1000000) >= 1000) \
+    {                                                                                                      \
+      printf("%s => H26X FPS:%d\n", tips, fcnt);                                                  \
+      snprintf(fps_str, sizeof(char)*32, "FPS: %02d", fcnt);						\
+      libmaix_cv_image_draw_string(image, 0, 0, fps_str, 1.5, MaixColor(255, 0, 0), 1);			\
+      ts1 = ts2;                                                                                           \
+      fcnt = 0;                                                                                            \
+    }                                                                                                      \
+  }
+
 
 // static struct timeval old, now;
 
@@ -178,18 +198,22 @@ void test_work() {
     libmaix_image_t *tmp = NULL;
     if (LIBMAIX_ERR_NONE == test.cam0->capture_image(test.cam0, &tmp))
     {
-        printf("w %d h %d p %d \r\n", tmp->width, tmp->height, tmp->mode);
+        //printf("w %d h %d p %d \r\n", tmp->width, tmp->height, tmp->mode);
         if (tmp->width == test.disp->width && test.disp->height == tmp->height) {
+            //libmaix_cv_image_draw_string(tmp, 0, 0, "FPS", 1.5, MaixColor(255, 0, 0), 1);
             test.disp->draw_image(test.disp, tmp);
         } else {
             libmaix_image_t *rs = libmaix_image_create(test.disp->width, test.disp->height, LIBMAIX_IMAGE_MODE_RGB888, LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
             if (rs) {
+                //printf("resize: %d-%d -> %d-%d\n", tmp->width, tmp->height, test.disp->width, test.disp->height);
                 libmaix_cv_image_resize(tmp, test.disp->width, test.disp->height, &rs);
+                libmaix_cv_image_draw_string(rs, 0, 0, fps_str, 1.5, MaixColor(255, 0, 0), 1);
+CALC_FPS_DISPLAY("maix_cam 0", rs);
                 test.disp->draw_image(test.disp, rs);
                 libmaix_image_destroy(&rs);
             }
         }
-        CALC_FPS("maix_cam 0");
+        //CALC_FPS("maix_cam 0");
 
         #ifdef CONFIG_ARCH_V831 // CONFIG_ARCH_V831 & CONFIG_ARCH_V833
         libmaix_image_t *t = NULL;
