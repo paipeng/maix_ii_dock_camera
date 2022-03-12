@@ -18,6 +18,9 @@
 
 #undef CONFIG_ARCH_V831
 
+#define CAPTURE_IMAGE_WIDTH 640
+#define CAPTURE_IMAGE_HEIGHT 480
+
 char fps_str[32];
 
 #define CALC_FPS(tips)                                                                                     \
@@ -151,7 +154,7 @@ void test_init() {
 
   libmaix_camera_module_init();
 
-  test.w0 = 432, test.h0 = 432;
+  test.w0 = CAPTURE_IMAGE_WIDTH, test.h0 = CAPTURE_IMAGE_HEIGHT;
   //test.w0 = 480, test.h0 = 480;
 
   test.cam0 = libmaix_cam_create(0, test.w0, test.h0, 1, 0);
@@ -188,6 +191,7 @@ void test_exit() {
 
 void test_work() {
 
+  printf("start_capture...\n");
   test.cam0->start_capture(test.cam0);
 
   #ifdef CONFIG_ARCH_V831 // CONFIG_ARCH_V831 & CONFIG_ARCH_V833
@@ -199,20 +203,25 @@ void test_work() {
     libmaix_image_t *tmp = NULL;
     if (LIBMAIX_ERR_NONE == test.cam0->capture_image(test.cam0, &tmp))
     {
-        //printf("w %d h %d p %d \r\n", tmp->width, tmp->height, tmp->mode);
+        printf("w %d h %d p %d \r\n", tmp->width, tmp->height, tmp->mode);
         if (tmp->width == test.disp->width && test.disp->height == tmp->height) {
             //libmaix_cv_image_draw_string(tmp, 0, 0, "FPS", 1.5, MaixColor(255, 0, 0), 1);
             test.disp->draw_image(test.disp, tmp);
         } else {
-            libmaix_image_t *rs = libmaix_image_create(test.disp->width, test.disp->height, LIBMAIX_IMAGE_MODE_RGB888, LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
+#if 1
+            int resize_width = test.disp->width;
+            int resize_height = test.disp->width*CAPTURE_IMAGE_HEIGHT/CAPTURE_IMAGE_WIDTH;
+            printf("resize: w %d h %d \n", resize_width, resize_height);
+            libmaix_image_t *rs = libmaix_image_create(resize_width, resize_height, LIBMAIX_IMAGE_MODE_RGB888, LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
             if (rs) {
-                //printf("resize: %d-%d -> %d-%d\n", tmp->width, tmp->height, test.disp->width, test.disp->height);
-                libmaix_cv_image_resize(tmp, test.disp->width, test.disp->height, &rs);
+                printf("resize: %d-%d -> %d-%d\n", tmp->width, tmp->height, resize_width, resize_height);
+                libmaix_cv_image_resize(tmp, resize_width, resize_height, &rs);
                 libmaix_cv_image_draw_string(rs, 0, 0, fps_str, 1.5, MaixColor(255, 0, 0), 1);
-CALC_FPS_DISPLAY("maix_cam 0", rs);
+                CALC_FPS_DISPLAY("maix_cam 0", rs);
                 test.disp->draw_image(test.disp, rs);
                 libmaix_image_destroy(&rs);
             }
+#endif
         }
         //CALC_FPS("maix_cam 0");
 
