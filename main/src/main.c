@@ -16,7 +16,7 @@
 // #include "rotate.h"
 
 
-#undef CONFIG_ARCH_V831
+//#undef CONFIG_ARCH_V831
 
 #define CAPTURE_IMAGE_WIDTH 640
 #define CAPTURE_IMAGE_HEIGHT 480
