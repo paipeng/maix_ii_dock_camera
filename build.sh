@@ -6,8 +6,9 @@ python3 project.py --toolchain /opt/toolchain-sunxi-musl/toolchain/bin --toolcha
 #python3 project.py menuconfig
 python3 project.py build
 #python3 project.py upload
+
 scp dist/maix_ii_dock_camera root@192.168.1.163:maix_dist
-scp dist/start_app.shi root@192.168.1.163:maix_dist
+scp dist/start_app.sh root@192.168.1.163:maix_dist
 
 #python3 project.py clean
 #python3 project.py distclean
